@@ -1,13 +1,15 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/AppSidebar';
 import ReputationCard from '@/components/ReputationCard';
 import ResultsTable from '@/components/ResultsTable';
+import { ShareReportModal } from '@/components/ShareReportModal';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 const Index = () => {
@@ -18,6 +20,7 @@ const Index = () => {
   const [trackedKeywords, setTrackedKeywords] = useState<string[]>([]);
   const [savedReports, setSavedReports] = useState<Record<string, any[]>>({});
   const [selectedKeyword, setSelectedKeyword] = useState('');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   
   const [results, setResults] = useState([
     {
@@ -264,9 +267,10 @@ const Index = () => {
         <SidebarInset>
           <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
             <div className="max-w-7xl mx-auto space-y-6">
-              {/* Header with Logo */}
+              {/* Header with Logo and Sidebar Toggle */}
               <div className="flex items-center justify-between py-4">
                 <div className="flex items-center space-x-4">
+                  <SidebarTrigger />
                   <img 
                     src="/lovable-uploads/f64bc9a8-107c-40dd-b13a-b4ad224292db.png" 
                     alt="Reputation Citadel Logo" 
@@ -309,6 +313,7 @@ const Index = () => {
                 lastUpdated={lastUpdated}
                 onRefresh={refreshKeyword}
                 isRefreshing={isRefreshing}
+                onShare={() => setIsShareModalOpen(true)}
               />
 
               {/* Results Table */}
@@ -333,6 +338,16 @@ const Index = () => {
           </div>
         </SidebarInset>
       </div>
+
+      {/* Share Report Modal */}
+      <ShareReportModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        keyword={selectedKeyword || keyword}
+        score={score}
+        lastUpdated={lastUpdated}
+        results={results}
+      />
     </SidebarProvider>
   );
 };
