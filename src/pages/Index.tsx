@@ -96,8 +96,9 @@ const Index = () => {
     }
   }, [savedReports]);
 
-  const refreshKeyword = async () => {
-    if (!keyword) return;
+  const refreshKeyword = async (keywordToRefresh?: string) => {
+    const targetKeyword = keywordToRefresh || selectedKeyword || keyword;
+    if (!targetKeyword) return;
     
     setIsRefreshing(true);
     try {
@@ -105,7 +106,7 @@ const Index = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          keyword,
+          keyword: targetKeyword,
           maxResults: 50 
         }),
       });
@@ -113,7 +114,7 @@ const Index = () => {
       const data = await response.json();
       
       // Get existing results for this keyword to preserve sentiment and control data
-      const existingResults = savedReports[keyword] || [];
+      const existingResults = savedReports[targetKeyword] || [];
       
       // Create a map of existing results by URL for quick lookup
       const existingResultsMap = new Map(
@@ -140,9 +141,9 @@ const Index = () => {
         };
       });
       
-      setSavedReports(prev => ({ ...prev, [keyword]: newResults }));
-      setTrackedKeywords(prev => [...new Set([...prev, keyword])]);
-      setSelectedKeyword(keyword);
+      setSavedReports(prev => ({ ...prev, [targetKeyword]: newResults }));
+      setTrackedKeywords(prev => [...new Set([...prev, targetKeyword])]);
+      setSelectedKeyword(targetKeyword);
       setResults(newResults);
       setLastUpdated(new Date().toLocaleString());
     } catch (error) {
@@ -321,7 +322,7 @@ const Index = () => {
                       onChange={(e) => setKeyword(e.target.value)}
                       className="flex-grow"
                     />
-                    <Button onClick={refreshKeyword} disabled={isRefreshing}>
+                    <Button onClick={() => refreshKeyword()} disabled={isRefreshing}>
                       {isRefreshing ? 'Tracking...' : 'Track'}
                     </Button>
                   </form>
@@ -332,7 +333,7 @@ const Index = () => {
               <ReputationCard 
                 score={score}
                 lastUpdated={lastUpdated}
-                onRefresh={refreshKeyword}
+                onRefresh={() => refreshKeyword()}
                 isRefreshing={isRefreshing}
                 onShare={() => setIsShareModalOpen(true)}
               />
