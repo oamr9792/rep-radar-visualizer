@@ -110,10 +110,16 @@ const Index = () => {
 
       const data = await response.json();
       
-      setSavedReports(prev => ({ ...prev, [keyword]: data.results }));
+      // Create new results with unique IDs to avoid reference sharing
+      const newResults = data.results.map((result: any, index: number) => ({
+        ...result,
+        id: Date.now() + index // Ensure unique IDs
+      }));
+      
+      setSavedReports(prev => ({ ...prev, [keyword]: newResults }));
       setTrackedKeywords(prev => [...new Set([...prev, keyword])]);
       setSelectedKeyword(keyword);
-      setResults(data.results);
+      setResults(newResults);
       setLastUpdated(new Date().toLocaleString());
     } catch (error) {
       console.error('Error fetching SERP data:', error);
@@ -126,31 +132,45 @@ const Index = () => {
   };
 
   function updateSentiment(id: number, newSentiment: string) {
+    console.log('Updating sentiment for ID:', id, 'to:', newSentiment);
+    
+    // Update the current results
     const updatedResults = results.map(item =>
       item.id === id ? { ...item, sentiment: newSentiment } : item
     );
     setResults(updatedResults);
     
     // Update the saved reports for the current keyword
-    if (selectedKeyword) {
+    if (selectedKeyword && savedReports[selectedKeyword]) {
+      const updatedSavedResults = savedReports[selectedKeyword].map(item =>
+        item.id === id ? { ...item, sentiment: newSentiment } : item
+      );
+      
       setSavedReports(prev => ({
         ...prev,
-        [selectedKeyword]: updatedResults
+        [selectedKeyword]: updatedSavedResults
       }));
     }
   }
 
   function toggleControl(id: number) {
+    console.log('Toggling control for ID:', id);
+    
+    // Update the current results
     const updatedResults = results.map(item =>
       item.id === id ? { ...item, hasControl: !item.hasControl } : item
     );
     setResults(updatedResults);
     
     // Update the saved reports for the current keyword
-    if (selectedKeyword) {
+    if (selectedKeyword && savedReports[selectedKeyword]) {
+      const updatedSavedResults = savedReports[selectedKeyword].map(item =>
+        item.id === id ? { ...item, hasControl: !item.hasControl } : item
+      );
+      
       setSavedReports(prev => ({
         ...prev,
-        [selectedKeyword]: updatedResults
+        [selectedKeyword]: updatedSavedResults
       }));
     }
   }
@@ -186,9 +206,11 @@ const Index = () => {
 
   useEffect(() => {
     if (savedReports[selectedKeyword]) {
-      setResults([...savedReports[selectedKeyword]]); // Create a new array to avoid reference sharing
+      // Create completely new objects to avoid any reference sharing
+      const freshResults = savedReports[selectedKeyword].map(result => ({ ...result }));
+      setResults(freshResults);
     }
-  }, [selectedKeyword, savedReports]);
+  }, [selectedKeyword]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
@@ -197,9 +219,9 @@ const Index = () => {
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center space-x-4">
             <img 
-              src="/lovable-uploads/499b2041-d476-4a05-b5b4-bd5e69c78469.png" 
-              alt="Company Logo" 
-              className="h-12 w-auto"
+              src="/lovable-uploads/f64bc9a8-107c-40dd-b13a-b4ad224292db.png" 
+              alt="Reputation Citadel Logo" 
+              className="h-16 w-auto"
             />
           </div>
         </div>
