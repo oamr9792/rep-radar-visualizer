@@ -95,20 +95,16 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               </TableCell>
               
               <TableCell className="space-y-1">
-                <div className="flex items-start space-x-2">
-                  <a 
-                    href={result.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="font-medium text-blue-600 hover:text-blue-800 underline flex items-center space-x-1 group"
-                  >
-                    <span className="line-clamp-2">{result.title}</span>
-                    <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                </div>
-                <p className="text-xs text-slate-500 truncate max-w-xs">
-                  {result.domain}
-                </p>
+                <div className="font-semibold">{result.title}</div>
+                <a 
+                  href={result.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-xs text-blue-600 underline hover:text-blue-800 flex items-center space-x-1 group"
+                >
+                  <span className="truncate max-w-xs">{result.url}</span>
+                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
               </TableCell>
               
               <TableCell>
