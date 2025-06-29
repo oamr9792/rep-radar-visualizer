@@ -1,0 +1,34 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // Change to "postgresql" if using PostgreSQL
+  url      = env("DATABASE_URL")
+}
+
+model Keyword {
+  id        Int        @id @default(autoincrement())
+  term      String     @unique
+  snapshots Snapshot[]
+}
+
+model Snapshot {
+  id         Int        @id @default(autoincrement())
+  createdAt  DateTime   @default(now())
+  keyword    Keyword    @relation(fields: [keywordId], references: [id])
+  keywordId  Int
+  serpItems  SerpItem[]
+}
+
+model SerpItem {
+  id          Int      @id @default(autoincrement())
+  snapshot    Snapshot @relation(fields: [snapshotId], references: [id])
+  snapshotId  Int
+  rank        Int
+  title       String
+  url         String
+  serpFeature String
+  sentiment   String
+  hasControl  Boolean
+}
