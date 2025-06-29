@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import ReputationCard from '@/components/ReputationCard';
 import ResultsTable from '@/components/ResultsTable';
 import { ShareReportModal } from '@/components/ShareReportModal';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { v4 as uuid } from 'uuid';
 
 const Index = () => {
   const [score, setScore] = useState(78);
@@ -109,10 +111,18 @@ const Index = () => {
       });
 
       const data = await response.json();
-      setResults(data.results);
+      
+      const normalised = data.results.map(r => ({
+        ...r,
+        id: uuid(),           // unique ID for React
+        sentiment: 'NEUTRAL', // default state
+        hasControl: false,
+      }));
+
+      setResults(normalised);
       
       // Update saved reports and UI state
-      setSavedReports(prev => ({ ...prev, [targetKeyword]: data.results }));
+      setSavedReports(prev => ({ ...prev, [targetKeyword]: normalised }));
       setTrackedKeywords(prev => [...new Set([...prev, targetKeyword])]);
       setSelectedKeyword(targetKeyword);
       setLastUpdated(new Date().toLocaleString());
