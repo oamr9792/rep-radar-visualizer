@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -7,7 +8,7 @@ import { ExternalLink, Shield, ShieldOff } from 'lucide-react';
 import TrendChart from './TrendChart';
 
 interface ResultItem {
-  id: number;
+  id: string; // Changed from number to string
   rank: number;
   title: string;
   url: string;
@@ -16,13 +17,13 @@ interface ResultItem {
   hasControl: boolean;
   rankHistory: number[];
   domain: string;
-  isNew?: boolean; // Add optional isNew property
+  isNew?: boolean;
 }
 
 interface ResultsTableProps {
   results: ResultItem[];
-  onUpdateSentiment: (id: number, sentiment: string) => void;
-  onToggleControl: (id: number) => void;
+  onUpdateSentiment: (id: string, sentiment: string) => void; // Changed from number to string
+  onToggleControl: (id: string) => void; // Changed from number to string
 }
 
 const ResultsTable: React.FC<ResultsTableProps> = ({

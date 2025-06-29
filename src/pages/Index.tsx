@@ -24,7 +24,7 @@ const Index = () => {
   
   const [results, setResults] = useState([
     {
-      id: 1,
+      id: '1', // Changed to string
       rank: 1,
       title: 'Negative Article About Data Privacy Concerns',
       url: 'https://techcrunch.com/example-article',
@@ -35,7 +35,7 @@ const Index = () => {
       domain: 'techcrunch.com'
     },
     {
-      id: 2,
+      id: '2', // Changed to string
       rank: 2,
       title: 'Your LinkedIn Professional Profile',
       url: 'https://linkedin.com/in/yourname',
@@ -46,7 +46,7 @@ const Index = () => {
       domain: 'linkedin.com'
     },
     {
-      id: 3,
+      id: '3', // Changed to string
       rank: 3,
       title: 'Company News Release - Product Launch',
       url: 'https://businesswire.com/news-release',
@@ -57,7 +57,7 @@ const Index = () => {
       domain: 'businesswire.com'
     },
     {
-      id: 4,
+      id: '4', // Changed to string
       rank: 4,
       title: 'Industry Forum Discussion Thread',
       url: 'https://reddit.com/r/technology/comments',
@@ -68,7 +68,7 @@ const Index = () => {
       domain: 'reddit.com'
     },
     {
-      id: 5,
+      id: '5', // Changed to string
       rank: 5,
       title: 'Professional Bio on Company Website',
       url: 'https://yourcompany.com/team/bio',
