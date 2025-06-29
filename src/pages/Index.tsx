@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -178,17 +177,38 @@ const Index = () => {
   const calculateScore = (data: typeof results) => {
     let totalWeight = 0;
     let weightedScore = 0;
+    let hasNegativeInTop10 = false;
     
-    data.forEach((result, index) => {
-      // Higher positions have more weight (position 1 = weight 10, position 2 = weight 9, etc.)
-      const weight = Math.max(11 - result.rank, 1);
+    // Check if there are negative results in top 10
+    data.forEach((result) => {
+      if (result.rank <= 10 && result.sentiment === 'NEGATIVE') {
+        hasNegativeInTop10 = true;
+      }
+    });
+    
+    data.forEach((result) => {
+      // Base weight calculation
+      let weight = Math.max(11 - result.rank, 1);
+      
+      // Apply position-based multipliers
+      if (result.rank <= 10) {
+        weight *= 3; // 3x weighting for top 10
+      } else if (result.rank <= 20) {
+        weight *= 1.5; // 1.5x weighting for positions 11-20
+      }
+      
+      // Apply control boost (20% increase in weighting)
+      if (result.hasControl) {
+        weight *= 1.2;
+      }
+      
       totalWeight += weight;
       
       let sentimentScore = 50; // Neutral baseline
       if (result.sentiment === 'POSITIVE') sentimentScore = 90;
       if (result.sentiment === 'NEGATIVE') sentimentScore = 10;
       
-      // Boost score if we have control over the result
+      // Boost score if we have control over positive results
       if (result.hasControl && result.sentiment === 'POSITIVE') {
         sentimentScore = 95;
       }
@@ -196,7 +216,14 @@ const Index = () => {
       weightedScore += sentimentScore * weight;
     });
     
-    return Math.round(weightedScore / totalWeight);
+    let finalScore = Math.round(weightedScore / totalWeight);
+    
+    // Cap score at 60 if there are negative results in top 10
+    if (hasNegativeInTop10 && finalScore > 60) {
+      finalScore = 60;
+    }
+    
+    return finalScore;
   };
 
   useEffect(() => {
