@@ -123,6 +123,7 @@ const Index = () => {
       // Process new results, preserving existing sentiment and control data
       const newResults = data.results.map((result: any, index: number) => {
         const existing = existingResultsMap.get(result.url);
+        const isNew = !existing; // Mark as new if not found in existing results
         
         // Update rank history - add new rank to the beginning, keep last 3
         const newRankHistory = existing 
@@ -134,7 +135,8 @@ const Index = () => {
           id: existing?.id || Date.now() + index, // Keep existing ID or create new one
           sentiment: existing?.sentiment || 'NEUTRAL', // Preserve existing sentiment
           hasControl: existing?.hasControl || false, // Preserve existing control status
-          rankHistory: newRankHistory
+          rankHistory: newRankHistory,
+          isNew: isNew // Add new marker
         };
       });
       

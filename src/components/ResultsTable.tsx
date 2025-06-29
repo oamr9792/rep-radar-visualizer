@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,6 +16,7 @@ interface ResultItem {
   hasControl: boolean;
   rankHistory: number[];
   domain: string;
+  isNew?: boolean; // Add optional isNew property
 }
 
 interface ResultsTableProps {
@@ -91,7 +91,12 @@ const ResultsTable: React.FC<ResultsTableProps> = ({
               className={`${getSentimentColor(result.sentiment)} hover:shadow-md transition-all duration-200`}
             >
               <TableCell className="font-bold text-lg">
-                {result.rank}
+                <div className="flex items-center gap-2">
+                  {result.rank}
+                  {result.isNew && (
+                    <Badge className="bg-blue-100 text-blue-800 text-xs">NEW</Badge>
+                  )}
+                </div>
               </TableCell>
               
               <TableCell className="space-y-1">

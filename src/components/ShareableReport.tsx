@@ -124,7 +124,14 @@ export function ShareableReport({ keyword, score, lastUpdated, results }: Sharea
               <tbody>
                 {results.map((result) => (
                   <tr key={result.id} className="border-b">
-                    <td className="p-3 font-medium">#{result.rank}</td>
+                    <td className="p-3 font-medium">
+                      <div className="flex items-center gap-2">
+                        #{result.rank}
+                        {result.isNew && (
+                          <Badge className="bg-blue-100 text-blue-800 text-xs">NEW</Badge>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3 max-w-xs">
                       <div className="truncate" title={result.title}>
                         {result.title}
