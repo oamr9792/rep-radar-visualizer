@@ -82,7 +82,7 @@ const Index = () => {
     
     setIsRefreshing(true);
     try {
-      const response = await fetch('http://localhost:3001/serp', {
+      const response = await fetch('http://192.168.1.115:3001/serp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword }),
