@@ -3,8 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Form } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/AppSidebar';
 import ReputationCard from '@/components/ReputationCard';
 import ResultsTable from '@/components/ResultsTable';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -244,134 +245,95 @@ const Index = () => {
     }
   }, [selectedKeyword]);
 
+  const loadReport = (reportKeyword: string) => {
+    setSelectedKeyword(reportKeyword);
+    if (savedReports[reportKeyword]) {
+      const freshResults = savedReports[reportKeyword].map(result => ({ ...result }));
+      setResults(freshResults);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header with Logo */}
-        <div className="flex items-center justify-between py-4">
-          <div className="flex items-center space-x-4">
-            <img 
-              src="/lovable-uploads/f64bc9a8-107c-40dd-b13a-b4ad224292db.png" 
-              alt="Reputation Citadel Logo" 
-              className="h-16 w-auto"
-            />
-          </div>
-        </div>
-
-        {/* Title Section */}
-        <div className="text-center space-y-2 py-4">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Reputation Tracker
-          </h1>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Monitor how your name or brand appears in Google search results with real-time sentiment analysis
-          </p>
-        </div>
-
-        {/* Keyword Input Form */}
-        <Card className="shadow-lg">
-          <CardContent className="p-6 space-y-4">
-            <form className="flex items-center space-x-2" onSubmit={(e) => { e.preventDefault(); refreshKeyword(); }}>
-              <Input
-                type="text"
-                placeholder="Enter keyword (e.g. Your Name)"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                className="flex-grow"
-              />
-              <Button onClick={refreshKeyword} disabled={isRefreshing}>
-                {isRefreshing ? 'Tracking...' : 'Track'}
-              </Button>
-            </form>
-            
-            {/* Saved Reports Dropdown */}
-            {trackedKeywords.length > 0 && (
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600 whitespace-nowrap">Saved Reports:</span>
-                <Select value={selectedKeyword} onValueChange={setSelectedKeyword}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a saved report" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {trackedKeywords.map((trackedKeyword) => (
-                      <SelectItem key={trackedKeyword} value={trackedKeyword}>
-                        {trackedKeyword}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Reputation Score Card */}
-        <ReputationCard 
-          score={score}
-          lastUpdated={lastUpdated}
-          onRefresh={refreshKeyword}
-          isRefreshing={isRefreshing}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar 
+          savedReports={savedReports}
+          onLoadReport={loadReport}
+          selectedKeyword={selectedKeyword}
         />
+        <SidebarInset>
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
+            <div className="max-w-7xl mx-auto space-y-6">
+              {/* Header with Logo */}
+              <div className="flex items-center justify-between py-4">
+                <div className="flex items-center space-x-4">
+                  <img 
+                    src="/lovable-uploads/f64bc9a8-107c-40dd-b13a-b4ad224292db.png" 
+                    alt="Reputation Citadel Logo" 
+                    className="h-16 w-auto"
+                  />
+                </div>
+              </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm font-medium">Positive Results</span>
+              {/* Title Section */}
+              <div className="text-center space-y-2 py-4">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Reputation Tracker
+                </h1>
+                <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                  Monitor how your name or brand appears in Google search results with real-time sentiment analysis
+                </p>
               </div>
-              <p className="text-2xl font-bold text-green-600 mt-1">
-                {results.filter(r => r.sentiment === 'POSITIVE').length}
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                <span className="text-sm font-medium">Negative Results</span>
-              </div>
-              <p className="text-2xl font-bold text-red-600 mt-1">
-                {results.filter(r => r.sentiment === 'NEGATIVE').length}
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card className="hover:shadow-md transition-shadow">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-sm font-medium">Controlled Results</span>
-              </div>
-              <p className="text-2xl font-bold text-blue-600 mt-1">
-                {results.filter(r => r.hasControl).length}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
 
-        {/* Results Table */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>Search Results Analysis</span>
-              <Badge variant="outline" className="text-sm">
-                Top {results.length} Results
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResultsTable 
-              results={results}
-              onUpdateSentiment={updateSentiment}
-              onToggleControl={toggleControl}
-            />
-          </CardContent>
-        </Card>
+              {/* Keyword Input Form */}
+              <Card className="shadow-lg">
+                <CardContent className="p-6">
+                  <form className="flex items-center space-x-2" onSubmit={(e) => { e.preventDefault(); refreshKeyword(); }}>
+                    <Input
+                      type="text"
+                      placeholder="Enter keyword (e.g. Your Name)"
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                      className="flex-grow"
+                    />
+                    <Button onClick={refreshKeyword} disabled={isRefreshing}>
+                      {isRefreshing ? 'Tracking...' : 'Track'}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+
+              {/* Reputation Score Card */}
+              <ReputationCard 
+                score={score}
+                lastUpdated={lastUpdated}
+                onRefresh={refreshKeyword}
+                isRefreshing={isRefreshing}
+              />
+
+              {/* Results Table */}
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>Search Results Analysis</span>
+                    <Badge variant="outline" className="text-sm">
+                      Top {results.length} Results
+                    </Badge>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResultsTable 
+                    results={results}
+                    onUpdateSentiment={updateSentiment}
+                    onToggleControl={toggleControl}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   );
 };
 
