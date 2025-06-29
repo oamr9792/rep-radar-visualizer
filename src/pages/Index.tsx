@@ -1,33 +1,29 @@
-// src/pages/Index.tsx
-import { useState, useEffect } from 'react';
-import ResultsTable from '@/components/ResultsTable';      // <- adjust if path differs
-import { ShareReportModal } from '@/components/ShareReportModal'; // optional
+import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
+import ResultsTable from '@/components/ResultsTable';
+// import { ShareReportModal } from '@/components/ShareReportModal'; // optional later
 
-/* ----------  Types  ---------- */
-type SerpItem = {
+/* ---------- Types ---------- */
+export type ResultItem = {
   id: string;
   rank: number;
   title: string;
   url: string;
   serpFeature: string;
+  domain: string;
   sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE';
   hasControl: boolean;
-  rankHistory?: number[];
+  rankHistory: number[]; // required
 };
 
-/* ----------  Component  ---------- */
+/* ---------- Component ---------- */
 const Index = () => {
-  /* ----- state ----- */
   const [keyword, setKeyword] = useState('');
-  const [results, setResults] = useState<SerpItem[]>([]);
+  const [results, setResults] = useState<ResultItem[]>([]);
   const [trackedKeywords, setTrackedKeywords] = useState<string[]>([]);
-  const [savedReports, setSavedReports] = useState<Record<string, SerpItem[]>>(
-    {}
-  );
-  const [selectedKeyword, setSelectedKeyword] = useState('');
+  const [savedReports, setSavedReports] = useState<Record<string, ResultItem[]>>({});
+  const [selectedKeyword, setSelectedKeyword] = useState<string>('');
 
-  /* ----- load any reports from localStorage on first mount ----- */
   useEffect(() => {
     const stored = localStorage.getItem('repRadarReports');
     if (stored) {
@@ -42,33 +38,30 @@ const Index = () => {
     }
   }, []);
 
-  /* ----- persist to localStorage whenever savedReports change ----- */
   useEffect(() => {
     if (Object.keys(savedReports).length) {
       localStorage.setItem('repRadarReports', JSON.stringify(savedReports));
     }
   }, [savedReports]);
 
-  /* ----- helper: sentiment colour ----- */
-  const sentimentColor = (s: SerpItem['sentiment']) => {
+  const sentimentColor = (s: ResultItem['sentiment']) => {
     switch (s) {
       case 'POSITIVE':
-        return 'bg-green-50 border-l-4 border-green-400';
+        return 'bg-green-50 border-l-4 border-green-500';
       case 'NEUTRAL':
-        return 'bg-yellow-50 border-l-4 border-yellow-400';
+        return 'bg-yellow-50 border-l-4 border-yellow-500';
       case 'NEGATIVE':
-        return 'bg-red-50 border-l-4 border-red-400';
+        return 'bg-red-50 border-l-4 border-red-500';
       default:
         return '';
     }
   };
 
-  /* ----- backend fetch + save ----- */
   async function refreshKeyword() {
     if (!keyword.trim()) return;
 
     try {
-      const resp = await fetch('https://rep-radar-visualizer.onrender.com', {
+      const resp = await fetch('https://rep-radar-visualizer.onrender.com/serp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ keyword }),
@@ -76,38 +69,39 @@ const Index = () => {
 
       const data = await resp.json();
 
-      // backend may return {error: "..."} on failure
       if (!data.results || !Array.isArray(data.results)) {
         console.error('Unexpected backend response:', data);
         alert('Backend error: could not fetch search results.');
         return;
       }
 
-      // normalise: ensure unique id, default flags
-      const normalised: SerpItem[] = data.results.map((r: any) => ({
-        ...r,
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const normalised: ResultItem[] = data.results.map((r: any) => ({
         id: uuid(),
+        rank: r.rank,
+        title: r.title,
+        url: r.url,
+        serpFeature: r.serpFeature,
+        domain: new URL(r.url).hostname ?? '',
         sentiment: r.sentiment ?? 'NEUTRAL',
         hasControl: r.hasControl ?? false,
+        rankHistory: r.rankHistory ?? [r.rank],
       }));
+      /* eslint-enable @typescript-eslint/no-explicit-any */
 
-      // save to state & localStorage
       setResults(normalised);
       setSavedReports((prev) => ({ ...prev, [keyword]: normalised }));
       setTrackedKeywords((prev) => [...new Set([...prev, keyword])]);
       setSelectedKeyword(keyword);
     } catch (err) {
       console.error('Error fetching SERP data:', err);
-      alert('Network error: failed to fetch results.');
+      alert('Failed to fetch data. Please check your connection.');
     }
   }
 
-  /* ----- update sentiment / control helpers ----- */
-  const updateSentiment = (id: string, newSentiment: SerpItem['sentiment']) => {
+  const updateSentiment = (id: string, sentiment: ResultItem['sentiment']) => {
     setResults((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, sentiment: newSentiment } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, sentiment } : item))
     );
   };
 
@@ -119,31 +113,26 @@ const Index = () => {
     );
   };
 
-  /* ----- when user selects a saved keyword from dropdown ----- */
   useEffect(() => {
     if (savedReports[selectedKeyword]) {
       setResults(savedReports[selectedKeyword]);
     }
   }, [selectedKeyword, savedReports]);
 
-  /* ----------  Render  ---------- */
   return (
     <main className="max-w-screen-lg mx-auto p-6 space-y-6">
-      {/* ---------- header ---------- */}
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Reputation Tracker</h1>
         <p className="text-gray-600">
-          Track how your brand or name appears on Google SERPs.
+          Track how your name or brand appears on Google search.
         </p>
       </header>
 
-      {/* ---------- search bar ---------- */}
-      <section className="flex items-center space-x-2">
+      <section className="flex flex-wrap items-center gap-2">
         <input
-          type="text"
-          placeholder="Enter keyword"
           value={keyword}
           onChange={(e) => setKeyword(e.target.value)}
+          placeholder="Enter keyword"
           className="flex-grow border rounded px-3 py-2"
         />
         <button
@@ -153,12 +142,11 @@ const Index = () => {
           Track
         </button>
 
-        {/* Saved keyword selector */}
         {trackedKeywords.length > 0 && (
           <select
             value={selectedKeyword}
             onChange={(e) => setSelectedKeyword(e.target.value)}
-            className="ml-4 border rounded px-3 py-2"
+            className="border rounded px-3 py-2"
           >
             {trackedKeywords.map((k) => (
               <option key={k}>{k}</option>
@@ -167,16 +155,22 @@ const Index = () => {
         )}
       </section>
 
-      {/* ---------- results table ---------- */}
       <ResultsTable
-        results={results}
-        sentimentColor={sentimentColor}
-        updateSentiment={updateSentiment}
-        toggleControl={toggleControl}
-      />
+  results={results}
+  updateSentiment={updateSentiment}   // ✅ matches ResultsTableProps
+  toggleControl={toggleControl}       // ✅ matches ResultsTableProps
+/>
 
-      {/* (Optional) Share report modal */}
-      <ShareReportModal keyword={selectedKeyword} results={results} />
+
+      {/* Uncomment if ShareReportModal is implemented */}
+      {/* <ShareReportModal
+        isOpen={false}
+        onClose={() => {}}
+        score={0}
+        lastUpdated=""
+        keyword={selectedKeyword}
+        results={results}
+      /> */}
     </main>
   );
 };
