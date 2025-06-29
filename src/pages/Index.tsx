@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -138,7 +137,7 @@ const Index = () => {
     }
   };
 
-  function updateSentiment(id: number, newSentiment: string) {
+  function updateSentiment(id: string, newSentiment: string) {
     console.log('Updating sentiment for ID:', id, 'to:', newSentiment);
     
     // Update the current results
@@ -160,7 +159,7 @@ const Index = () => {
     }
   }
 
-  function toggleControl(id: number) {
+  function toggleControl(id: string) {
     console.log('Toggling control for ID:', id);
     
     // Update the current results
