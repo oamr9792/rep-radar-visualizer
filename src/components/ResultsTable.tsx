@@ -1,13 +1,14 @@
-/*  src/components/ResultsTable.tsx  */
+import React from 'react';
 import type { ResultItem } from '@/pages/Index';
 
 export interface ResultsTableProps {
   results: ResultItem[];
-  updateSentiment: (id: string, sentiment: ResultItem['sentiment']) => void;
+  updateSentiment: (id: string, sentiment: 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE') => void;
   toggleControl: (id: string) => void;
 }
 
-const sentimentClass = (s: ResultItem['sentiment']) => {
+// Color-coding class helper
+const sentimentClass = (s: string) => {
   switch (s) {
     case 'POSITIVE':
       return 'bg-green-50 border-l-4 border-green-500';
@@ -20,11 +21,7 @@ const sentimentClass = (s: ResultItem['sentiment']) => {
   }
 };
 
-const ResultsTable = ({
-  results,
-  updateSentiment,
-  toggleControl,
-}: ResultsTableProps) => {
+const ResultsTable: React.FC<ResultsTableProps> = ({ results, updateSentiment, toggleControl }) => {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full border text-sm">
@@ -59,12 +56,7 @@ const ResultsTable = ({
               <td className="p-2">
                 <select
                   value={item.sentiment}
-                  onChange={(e) =>
-                    updateSentiment(
-                      item.id,
-                      e.target.value as ResultItem['sentiment']
-                    )
-                  }
+                  onChange={(e) => updateSentiment(item.id, e.target.value as ResultItem['sentiment'])}
                   className="border rounded px-1 py-0.5"
                 >
                   <option value="POSITIVE">🟢 Positive</option>
