@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ const Index = () => {
   const [score, setScore] = useState(78);
   const [lastUpdated, setLastUpdated] = useState('2025-06-29 03:00 PM');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [currentKeyword] = useState('your brand name'); // Add keyword state
   
   const [results, setResults] = useState([
     {
@@ -70,14 +70,26 @@ const Index = () => {
     }
   ]);
 
-  const refreshData = async () => {
+  const refreshKeyword = async () => {
     setIsRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
-      setScore(Math.floor(Math.random() * 20) + 70); // Random score between 70-90
+    try {
+      const response = await fetch('http://localhost:3001/serp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keyword: currentKeyword }),
+      });
+
+      const data = await response.json();
+      setResults(data.results);
       setLastUpdated(new Date().toLocaleString());
+    } catch (error) {
+      console.error('Error fetching SERP data:', error);
+      // Fallback to mock data update for now
+      setScore(Math.floor(Math.random() * 20) + 70);
+      setLastUpdated(new Date().toLocaleString());
+    } finally {
       setIsRefreshing(false);
-    }, 2000);
+    }
   };
 
   const updateSentiment = (id: number, newSentiment: string) => {
@@ -146,7 +158,7 @@ const Index = () => {
         <ReputationCard 
           score={score}
           lastUpdated={lastUpdated}
-          onRefresh={refreshData}
+          onRefresh={refreshKeyword}
           isRefreshing={isRefreshing}
         />
 
