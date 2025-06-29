@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,61 +102,19 @@ const Index = () => {
     
     setIsRefreshing(true);
     try {
-      // Call the DataForSEO API directly using the dataforseo.js module
-      const response = await fetch('http://192.168.1.115:3001/serp', {
+      const response = await fetch('http://localhost:3001/serp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          keyword: targetKeyword,
-          locationName: 'United States',
-          languageCode: 'en'
-        }),
+        body: JSON.stringify({ keyword: targetKeyword }),
       });
-
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.status}`);
-      }
 
       const data = await response.json();
-      console.log('API response:', data);
-      
-      // Get existing results for this keyword to preserve sentiment and control data
-      const existingResults = savedReports[targetKeyword] || [];
-      
-      // Create a map of existing results by URL for quick lookup
-      const existingResultsMap = new Map(
-        existingResults.map(result => [result.url, result])
-      );
-      
-      // Process new results, preserving existing sentiment and control data
-      const newResults = data.results.map((result: any, index: number) => {
-        const existing = existingResultsMap.get(result.url);
-        const isNew = !existing; // Mark as new if not found in existing results
-        
-        // Update rank history - add new rank to the beginning, keep last 3
-        const newRankHistory = existing 
-          ? [result.rank, ...existing.rankHistory].slice(0, 3)
-          : [result.rank, result.rank, result.rank]; // Initialize with same rank if new
-        
-        return {
-          id: existing?.id || Date.now() + index, // Keep existing ID or create new one
-          rank: result.rank,
-          title: result.title,
-          url: result.url,
-          serpFeature: result.serpFeature || 'organic',
-          domain: new URL(result.url).hostname,
-          sentiment: existing?.sentiment || 'NEUTRAL', // Preserve existing sentiment
-          hasControl: existing?.hasControl || false, // Preserve existing control status
-          rankHistory: newRankHistory,
-          isNew: isNew // Add new marker
-        };
-      });
+      setResults(data.results);
       
       // Update saved reports and UI state
-      setSavedReports(prev => ({ ...prev, [targetKeyword]: newResults }));
+      setSavedReports(prev => ({ ...prev, [targetKeyword]: data.results }));
       setTrackedKeywords(prev => [...new Set([...prev, targetKeyword])]);
       setSelectedKeyword(targetKeyword);
-      setResults(newResults);
       setLastUpdated(new Date().toLocaleString());
       
       // Clear the input field if we just tracked a new keyword
@@ -166,45 +123,6 @@ const Index = () => {
       }
     } catch (error) {
       console.error('Error fetching SERP data:', error);
-      
-      // Create a more realistic fallback with the actual keyword
-      const fallbackResults = [
-        {
-          id: Date.now() + 1,
-          rank: 1,
-          title: `${targetKeyword} - Official Website`,
-          url: `https://example.com/${targetKeyword.toLowerCase().replace(/\s+/g, '-')}`,
-          serpFeature: 'organic',
-          sentiment: 'POSITIVE',
-          hasControl: true,
-          rankHistory: [1, 2, 1],
-          domain: 'example.com',
-          isNew: true
-        },
-        {
-          id: Date.now() + 2,
-          rank: 2,
-          title: `News about ${targetKeyword}`,
-          url: `https://news.example.com/article-about-${targetKeyword.toLowerCase().replace(/\s+/g, '-')}`,
-          serpFeature: 'news',
-          sentiment: 'NEUTRAL',
-          hasControl: false,
-          rankHistory: [3, 2, 2],
-          domain: 'news.example.com',
-          isNew: true
-        }
-      ];
-      
-      // Update with fallback data
-      setSavedReports(prev => ({ ...prev, [targetKeyword]: fallbackResults }));
-      setTrackedKeywords(prev => [...new Set([...prev, targetKeyword])]);
-      setSelectedKeyword(targetKeyword);
-      setResults(fallbackResults);
-      setLastUpdated(new Date().toLocaleString());
-      
-      if (targetKeyword === keyword) {
-        setKeyword('');
-      }
     } finally {
       setIsRefreshing(false);
     }
