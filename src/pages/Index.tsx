@@ -193,6 +193,11 @@ const Index = () => {
       // Apply position-based multipliers
       if (result.rank <= 10) {
         weight *= 3; // 3x weighting for top 10
+        
+        // Extra penalty weighting for negative results in top 10
+        if (result.sentiment === 'NEGATIVE') {
+          weight *= 2; // Additional 2x weighting for negative results in top 10
+        }
       } else if (result.rank <= 20) {
         weight *= 1.5; // 1.5x weighting for positions 11-20
       }
@@ -218,7 +223,7 @@ const Index = () => {
     
     let finalScore = Math.round(weightedScore / totalWeight);
     
-    // Cap score at 60 if there are negative results in top 10
+    // Cap score at 60 if there are negative results in top 10, but still allow it to go lower
     if (hasNegativeInTop10 && finalScore > 60) {
       finalScore = 60;
     }
