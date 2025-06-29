@@ -101,7 +101,10 @@ const Index = () => {
       const response = await fetch('http://192.168.1.115:3001/serp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword }),
+        body: JSON.stringify({ 
+          keyword,
+          maxResults: 50 
+        }),
       });
 
       const data = await response.json();
