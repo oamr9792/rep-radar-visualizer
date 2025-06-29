@@ -7,33 +7,44 @@ interface TrendChartProps {
 
 const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
   if (!data || data.length < 2) {
-    return <div className="w-20 h-8 bg-gray-100 rounded"></div>;
+    return (
+      <div className="w-20 h-8 bg-gray-100 rounded flex items-center justify-center">
+        <span className="text-xs text-gray-400">No data</span>
+      </div>
+    );
   }
 
-  // Invert the data since lower rank is better (rank 1 is top)
-  const invertedData = data.map(rank => 11 - rank); // Assuming max rank is 10
-  const maxValue = Math.max(...invertedData);
-  const minValue = Math.min(...invertedData);
-  const range = maxValue - minValue || 1;
+  // Since lower rank is better (rank 1 is top), we need to invert for visualization
+  // We'll map ranks to a 0-100 scale where 100 is best (rank 1) and 0 is worst
+  const maxRank = Math.max(...data);
+  const minRank = Math.min(...data);
+  const range = maxRank - minRank || 1;
 
-  // Create SVG path
+  // Invert the data so rank 1 shows at top of chart
+  const invertedData = data.map(rank => {
+    // Convert rank to 0-100 scale (inverted so rank 1 = 100, higher ranks = lower values)
+    return ((maxRank - rank) / range) * 100;
+  });
+
+  // Create SVG path points
   const points = invertedData.map((value, index) => {
     const x = (index / (data.length - 1)) * 100;
-    const y = 100 - ((value - minValue) / range) * 100;
+    const y = 100 - value; // Flip Y axis so higher values appear at top
     return `${x},${y}`;
   }).join(' ');
 
-  // Determine trend direction and color
-  const firstValue = invertedData[0];
-  const lastValue = invertedData[invertedData.length - 1];
-  const isImproving = lastValue > firstValue;
-  const isStable = lastValue === firstValue;
+  // Determine trend direction
+  const firstRank = data[0];
+  const lastRank = data[data.length - 1];
+  const isImproving = lastRank < firstRank; // Lower rank = better
+  const isStable = lastRank === firstRank;
   
   const strokeColor = isImproving ? '#10b981' : isStable ? '#f59e0b' : '#ef4444';
   const fillColor = isImproving ? '#10b98120' : isStable ? '#f59e0b20' : '#ef444420';
+  const bgColor = isImproving ? 'bg-green-50' : isStable ? 'bg-yellow-50' : 'bg-red-50';
 
   return (
-    <div className="w-20 h-8 relative">
+    <div className={`w-20 h-8 relative rounded ${bgColor} border`}>
       <svg 
         width="100%" 
         height="100%" 
@@ -53,7 +64,7 @@ const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
           points={points}
           fill="none"
           stroke={strokeColor}
-          strokeWidth="3"
+          strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
@@ -61,24 +72,29 @@ const TrendChart: React.FC<TrendChartProps> = ({ data }) => {
         {/* Data points */}
         {invertedData.map((value, index) => {
           const x = (index / (data.length - 1)) * 100;
-          const y = 100 - ((value - minValue) / range) * 100;
+          const y = 100 - value;
           return (
             <circle
               key={index}
               cx={x}
               cy={y}
-              r="2"
+              r="1.5"
               fill={strokeColor}
               stroke="white"
-              strokeWidth="1"
+              strokeWidth="0.5"
             />
           );
         })}
       </svg>
       
-      {/* Trend indicator */}
-      <div className="absolute -top-1 -right-1 text-xs">
-        {isImproving ? '📈' : isStable ? '📊' : '📉'}
+      {/* Trend indicator with rank info */}
+      <div className="absolute -top-1 -right-1 text-xs flex items-center">
+        <span className="bg-white rounded px-1 text-xs font-mono">
+          {lastRank}
+        </span>
+        <span className="ml-1">
+          {isImproving ? '📈' : isStable ? '📊' : '📉'}
+        </span>
       </div>
     </div>
   );
