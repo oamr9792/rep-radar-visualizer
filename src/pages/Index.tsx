@@ -76,6 +76,23 @@ const Index = () => {
     }
   ]);
 
+  // Load saved reports from localStorage on component mount
+  useEffect(() => {
+    const saved = localStorage.getItem('repRadarReports');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      setSavedReports(parsed);
+      setTrackedKeywords(Object.keys(parsed));
+    }
+  }, []);
+
+  // Save reports to localStorage whenever savedReports changes
+  useEffect(() => {
+    if (Object.keys(savedReports).length > 0) {
+      localStorage.setItem('repRadarReports', JSON.stringify(savedReports));
+    }
+  }, [savedReports]);
+
   const refreshKeyword = async () => {
     if (!keyword) return;
     
