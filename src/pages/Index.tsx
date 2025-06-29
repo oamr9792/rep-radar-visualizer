@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,11 +112,31 @@ const Index = () => {
 
       const data = await response.json();
       
-      // Create new results with unique IDs to avoid reference sharing
-      const newResults = data.results.map((result: any, index: number) => ({
-        ...result,
-        id: Date.now() + index // Ensure unique IDs
-      }));
+      // Get existing results for this keyword to preserve sentiment and control data
+      const existingResults = savedReports[keyword] || [];
+      
+      // Create a map of existing results by URL for quick lookup
+      const existingResultsMap = new Map(
+        existingResults.map(result => [result.url, result])
+      );
+      
+      // Process new results, preserving existing sentiment and control data
+      const newResults = data.results.map((result: any, index: number) => {
+        const existing = existingResultsMap.get(result.url);
+        
+        // Update rank history - add new rank to the beginning, keep last 3
+        const newRankHistory = existing 
+          ? [result.rank, ...existing.rankHistory].slice(0, 3)
+          : [result.rank, result.rank, result.rank]; // Initialize with same rank if new
+        
+        return {
+          ...result,
+          id: existing?.id || Date.now() + index, // Keep existing ID or create new one
+          sentiment: existing?.sentiment || 'NEUTRAL', // Preserve existing sentiment
+          hasControl: existing?.hasControl || false, // Preserve existing control status
+          rankHistory: newRankHistory
+        };
+      });
       
       setSavedReports(prev => ({ ...prev, [keyword]: newResults }));
       setTrackedKeywords(prev => [...new Set([...prev, keyword])]);
