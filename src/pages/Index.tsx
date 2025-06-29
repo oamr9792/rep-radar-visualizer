@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Form } from '@/components/ui/form';
 import ReputationCard from '@/components/ReputationCard';
 import ResultsTable from '@/components/ResultsTable';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -10,7 +12,7 @@ const Index = () => {
   const [score, setScore] = useState(78);
   const [lastUpdated, setLastUpdated] = useState('2025-06-29 03:00 PM');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [currentKeyword] = useState('your brand name'); // Add keyword state
+  const [keyword, setKeyword] = useState('your brand name'); // Changed from currentKeyword to keyword
   
   const [results, setResults] = useState([
     {
@@ -71,12 +73,14 @@ const Index = () => {
   ]);
 
   const refreshKeyword = async () => {
+    if (!keyword) return;
+    
     setIsRefreshing(true);
     try {
       const response = await fetch('http://localhost:3001/serp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: currentKeyword }),
+        body: JSON.stringify({ keyword }),
       });
 
       const data = await response.json();
@@ -153,6 +157,24 @@ const Index = () => {
             Monitor how your name or brand appears in Google search results with real-time sentiment analysis
           </p>
         </div>
+
+        {/* Keyword Input Form */}
+        <Card className="shadow-lg">
+          <CardContent className="p-6">
+            <form className="flex items-center space-x-2" onSubmit={(e) => { e.preventDefault(); refreshKeyword(); }}>
+              <Input
+                type="text"
+                placeholder="Enter keyword (e.g. Your Name)"
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                className="flex-grow"
+              />
+              <Button onClick={refreshKeyword} disabled={isRefreshing}>
+                {isRefreshing ? 'Tracking...' : 'Track'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
 
         {/* Reputation Score Card */}
         <ReputationCard 
