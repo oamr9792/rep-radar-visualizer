@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Download, Share2 } from 'lucide-react';
+import { Download, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface ShareableReportProps {
   keyword: string;
@@ -28,6 +28,36 @@ export function ShareableReport({ keyword, score, lastUpdated, results }: Sharea
       case 'POSITIVE': return 'bg-green-100 text-green-800';
       case 'NEGATIVE': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getTrendIcon = (rankHistory: number[]) => {
+    if (!rankHistory || rankHistory.length < 2) return <Minus className="w-4 h-4 text-gray-400" />;
+    
+    const firstRank = rankHistory[rankHistory.length - 1]; // Oldest rank
+    const lastRank = rankHistory[0]; // Most recent rank
+    
+    if (lastRank < firstRank) {
+      return <TrendingUp className="w-4 h-4 text-green-600" />; // Improved (lower rank number is better)
+    } else if (lastRank > firstRank) {
+      return <TrendingDown className="w-4 h-4 text-red-600" />; // Worsened
+    } else {
+      return <Minus className="w-4 h-4 text-gray-400" />; // No change
+    }
+  };
+
+  const getTrendText = (rankHistory: number[]) => {
+    if (!rankHistory || rankHistory.length < 2) return 'No data';
+    
+    const firstRank = rankHistory[rankHistory.length - 1];
+    const lastRank = rankHistory[0];
+    
+    if (lastRank < firstRank) {
+      return `↑ ${firstRank - lastRank}`;
+    } else if (lastRank > firstRank) {
+      return `↓ ${lastRank - firstRank}`;
+    } else {
+      return '→ 0';
     }
   };
 
@@ -88,6 +118,7 @@ export function ShareableReport({ keyword, score, lastUpdated, results }: Sharea
                   <th className="text-left p-3 font-semibold">Domain</th>
                   <th className="text-left p-3 font-semibold">Sentiment</th>
                   <th className="text-left p-3 font-semibold">Control</th>
+                  <th className="text-left p-3 font-semibold">Trend</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,7 +131,7 @@ export function ShareableReport({ keyword, score, lastUpdated, results }: Sharea
                       </div>
                     </td>
                     <td className="p-3 text-sm text-gray-600">
-                      {result.domain}
+                      {result.domain || new URL(result.url).hostname}
                     </td>
                     <td className="p-3">
                       <Badge 
@@ -114,6 +145,14 @@ export function ShareableReport({ keyword, score, lastUpdated, results }: Sharea
                       <Badge variant={result.hasControl ? "default" : "outline"}>
                         {result.hasControl ? "Yes" : "No"}
                       </Badge>
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        {getTrendIcon(result.rankHistory)}
+                        <span className="text-sm font-medium">
+                          {getTrendText(result.rankHistory)}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}
