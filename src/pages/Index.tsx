@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -105,25 +104,21 @@ const Index = () => {
     }
   };
 
-  const updateSentiment = (id: number, newSentiment: string) => {
-    setResults(prev => prev.map(result => 
-      result.id === id ? { ...result, sentiment: newSentiment } : result
-    ));
-    
-    // Recalculate score based on sentiment changes
-    const updatedResults = results.map(result => 
-      result.id === id ? { ...result, sentiment: newSentiment } : result
+  function updateSentiment(id: number, newSentiment: string) {
+    setResults(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, sentiment: newSentiment } : item
+      )
     );
-    
-    const newScore = calculateScore(updatedResults);
-    setScore(newScore);
-  };
+  }
 
-  const toggleControl = (id: number) => {
-    setResults(prev => prev.map(result => 
-      result.id === id ? { ...result, hasControl: !result.hasControl } : result
-    ));
-  };
+  function toggleControl(id: number) {
+    setResults(prev =>
+      prev.map(item =>
+        item.id === id ? { ...item, hasControl: !item.hasControl } : item
+      )
+    );
+  }
 
   const calculateScore = (data: typeof results) => {
     let totalWeight = 0;
