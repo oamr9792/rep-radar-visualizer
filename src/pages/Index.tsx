@@ -141,11 +141,17 @@ const Index = () => {
         };
       });
       
+      // Update saved reports and UI state
       setSavedReports(prev => ({ ...prev, [targetKeyword]: newResults }));
       setTrackedKeywords(prev => [...new Set([...prev, targetKeyword])]);
       setSelectedKeyword(targetKeyword);
       setResults(newResults);
       setLastUpdated(new Date().toLocaleString());
+      
+      // Clear the input field if we just tracked a new keyword
+      if (targetKeyword === keyword) {
+        setKeyword('');
+      }
     } catch (error) {
       console.error('Error fetching SERP data:', error);
       // Fallback to mock data update for now
