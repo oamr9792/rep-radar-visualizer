@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -130,7 +131,7 @@ const Index = () => {
     );
     setResults(updatedResults);
     
-    // Update the saved reports if we have a selected keyword
+    // Update the saved reports for the current keyword
     if (selectedKeyword) {
       setSavedReports(prev => ({
         ...prev,
@@ -145,7 +146,7 @@ const Index = () => {
     );
     setResults(updatedResults);
     
-    // Update the saved reports if we have a selected keyword
+    // Update the saved reports for the current keyword
     if (selectedKeyword) {
       setSavedReports(prev => ({
         ...prev,
@@ -185,15 +186,26 @@ const Index = () => {
 
   useEffect(() => {
     if (savedReports[selectedKeyword]) {
-      setResults(savedReports[selectedKeyword]);
+      setResults([...savedReports[selectedKeyword]]); // Create a new array to avoid reference sharing
     }
   }, [selectedKeyword, savedReports]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-2 py-8">
+        {/* Header with Logo */}
+        <div className="flex items-center justify-between py-4">
+          <div className="flex items-center space-x-4">
+            <img 
+              src="/lovable-uploads/499b2041-d476-4a05-b5b4-bd5e69c78469.png" 
+              alt="Company Logo" 
+              className="h-12 w-auto"
+            />
+          </div>
+        </div>
+
+        {/* Title Section */}
+        <div className="text-center space-y-2 py-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Reputation Tracker
           </h1>
