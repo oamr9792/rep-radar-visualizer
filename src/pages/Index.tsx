@@ -24,7 +24,7 @@ const Index = () => {
   
   const [results, setResults] = useState([
     {
-      id: '1', // Changed to string
+      id: '1',
       rank: 1,
       title: 'Negative Article About Data Privacy Concerns',
       url: 'https://techcrunch.com/example-article',
@@ -35,7 +35,7 @@ const Index = () => {
       domain: 'techcrunch.com'
     },
     {
-      id: '2', // Changed to string
+      id: '2',
       rank: 2,
       title: 'Your LinkedIn Professional Profile',
       url: 'https://linkedin.com/in/yourname',
@@ -46,7 +46,7 @@ const Index = () => {
       domain: 'linkedin.com'
     },
     {
-      id: '3', // Changed to string
+      id: '3',
       rank: 3,
       title: 'Company News Release - Product Launch',
       url: 'https://businesswire.com/news-release',
@@ -57,7 +57,7 @@ const Index = () => {
       domain: 'businesswire.com'
     },
     {
-      id: '4', // Changed to string
+      id: '4',
       rank: 4,
       title: 'Industry Forum Discussion Thread',
       url: 'https://reddit.com/r/technology/comments',
@@ -68,7 +68,7 @@ const Index = () => {
       domain: 'reddit.com'
     },
     {
-      id: '5', // Changed to string
+      id: '5',
       rank: 5,
       title: 'Professional Bio on Company Website',
       url: 'https://yourcompany.com/team/bio',
@@ -111,12 +111,22 @@ const Index = () => {
 
       const data = await response.json();
       
-      const normalised = data.results.map(r => ({
-        ...r,
-        id: uuid(),           // unique ID for React
-        sentiment: 'NEUTRAL', // default state
-        hasControl: false,
-      }));
+      // Get existing results to preserve sentiment and control settings
+      const existingResults = savedReports[targetKeyword] || results;
+      
+      const normalised = data.results.map((newResult: any) => {
+        // Try to find existing result by URL to preserve user settings
+        const existingResult = existingResults.find((existing: any) => 
+          existing.url === newResult.url || existing.title === newResult.title
+        );
+        
+        return {
+          ...newResult,
+          id: existingResult?.id || uuid(), // Keep existing ID if found, or create new one
+          sentiment: existingResult?.sentiment || 'NEUTRAL', // Preserve existing sentiment
+          hasControl: existingResult?.hasControl || false, // Preserve existing control setting
+        };
+      });
 
       setResults(normalised);
       
