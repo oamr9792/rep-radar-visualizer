@@ -7,7 +7,6 @@ export interface ResultsTableProps {
   toggleControl: (id: string) => void;
 }
 
-/* --- colour helper --- */
 const sentimentClass = (s: ResultItem['sentiment']) => {
   switch (s) {
     case 'POSITIVE':

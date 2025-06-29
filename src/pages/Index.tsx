@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { v4 as uuid } from 'uuid';
 import ResultsTable from '@/components/ResultsTable';
+import TrendChart from '@/components/TrendChart';
 
 /* ---------- Types ---------- */
 export type ResultItem = {
@@ -22,17 +23,23 @@ type RawSerpResult = {
   serpFeature: string;
 };
 
+/* ---------- Config ---------- */
 const API_URL = 'https://rep-radar-visualizer.onrender.com/serp';
 
+/* ---------- Component ---------- */
 const Index = () => {
   const [keyword, setKeyword] = useState('');
   const [results, setResults] = useState<ResultItem[]>([]);
-  const [savedReports, setSavedReports] = useState<Record<string, ResultItem[]>>({});
+  const [savedReports, setSavedReports] = useState<Record<string, ResultItem[]>>(
+    {}
+  );
   const [trackedKeywords, setTrackedKeywords] = useState<string[]>([]);
   const [selectedKeyword, setSelectedKeyword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [score, setScore] = useState(0);
 
+  /* ---------- localStorage load & persist ---------- */
   useEffect(() => {
     const stored = localStorage.getItem('repRadarReports');
     if (stored) {
@@ -43,6 +50,7 @@ const Index = () => {
       if (first) {
         setSelectedKeyword(first);
         setResults(parsed[first]);
+        setScore(calculateScore(parsed[first]));
       }
     }
   }, []);
@@ -51,24 +59,19 @@ const Index = () => {
     localStorage.setItem('repRadarReports', JSON.stringify(savedReports));
   }, [savedReports]);
 
-  const reputationScore = () => {
-    if (!results.length) return 0;
-
-    const TOP10 = 0.7;
-    const SECOND = 0.2;
-    const THIRD = 0.1;
-
-    const SENT_FACTOR = { POSITIVE: -1, NEUTRAL: 0, NEGATIVE: 1 } as const;
-
-    let score = 0;
-    results.forEach((r) => {
-      const bucket = r.rank <= 10 ? TOP10 : r.rank <= 30 ? SECOND : THIRD;
-      score += bucket * SENT_FACTOR[r.sentiment];
+  /* ---------- Score ---------- */
+  function calculateScore(list: ResultItem[]) {
+    const W = { TOP: 0.7, MID: 0.2, LOW: 0.1 };
+    const SENT = { POSITIVE: -1, NEUTRAL: 0, NEGATIVE: 1 } as const;
+    let raw = 0;
+    list.forEach((i) => {
+      const bucket = i.rank <= 10 ? W.TOP : i.rank <= 30 ? W.MID : W.LOW;
+      raw += bucket * SENT[i.sentiment];
     });
+    return Math.round(((1 - raw) / 2) * 100);
+  }
 
-    return Math.round(((1 - score) / 2) * 100);
-  };
-
+  /* ---------- Fetch & normalise ---------- */
   async function refreshKeyword(manual = false) {
     if (!keyword.trim()) return;
     setIsLoading(true);
@@ -82,30 +85,33 @@ const Index = () => {
       const data = await resp.json();
 
       if (!Array.isArray(data.results)) {
-        alert('Backend error. See console.');
-        console.error(data);
-        return;
+        alert('Backend error'); console.error(data); return;
       }
 
-      const prev = savedReports[keyword] ?? [];
-      const normalised: ResultItem[] = data.results.map((r: RawSerpResult) => {
-        const match = prev.find((p) => p.url === r.url);
-        const history = match ? [r.rank, ...match.rankHistory] : [r.rank];
+      const prevArr = savedReports[keyword] ?? [];
+      const prevMap = new Map(prevArr.map((p) => [p.url, p]));
 
-        return {
-          id: uuid(),
-          rank: r.rank,
-          title: r.title,
-          url: r.url,
-          serpFeature: r.serpFeature,
-          domain: new URL(r.url).hostname,
-          sentiment: (match?.sentiment as ResultItem['sentiment']) ?? 'NEUTRAL',
-          hasControl: match?.hasControl ?? false,
-          rankHistory: history.slice(0, 5),
-        };
-      });
+      const normalised: ResultItem[] = (data.results as RawSerpResult[]).map(
+        (r) => {
+          const prev = prevMap.get(r.url);
+          const history = prev ? [r.rank, ...prev.rankHistory] : [r.rank];
+
+          return {
+            id: prev?.id ?? uuid(),
+            rank: r.rank,
+            title: r.title,
+            url: r.url,
+            serpFeature: r.serpFeature,
+            domain: new URL(r.url).hostname,
+            sentiment: prev?.sentiment ?? 'NEUTRAL',
+            hasControl: prev?.hasControl ?? false,
+            rankHistory: history.slice(0, 30),
+          };
+        }
+      );
 
       setResults(normalised);
+      setScore(calculateScore(normalised));
       setSavedReports((p) => ({ ...p, [keyword]: normalised }));
       if (!trackedKeywords.includes(keyword))
         setTrackedKeywords((p) => [...p, keyword]);
@@ -120,43 +126,50 @@ const Index = () => {
     }
   }
 
-  const updateSentiment = (id: string, sentiment: ResultItem['sentiment']) =>
-    setResults((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, sentiment } : i))
-    );
+  /* ---------- Update helpers ---------- */
+  const updateSentiment = (id: string, sentiment: ResultItem['sentiment']) => {
+    setResults((prev) => {
+      const next = prev.map((i) =>
+        i.id === id ? { ...i, sentiment } : i
+      );
+      setSavedReports((p) => ({ ...p, [selectedKeyword]: next }));
+      setScore(calculateScore(next));
+      return next;
+    });
+  };
 
-  const toggleControl = (id: string) =>
-    setResults((prev) =>
-      prev.map((i) => (i.id === id ? { ...i, hasControl: !i.hasControl } : i))
-    );
+  const toggleControl = (id: string) => {
+    setResults((prev) => {
+      const next = prev.map((i) =>
+        i.id === id ? { ...i, hasControl: !i.hasControl } : i
+      );
+      setSavedReports((p) => ({ ...p, [selectedKeyword]: next }));
+      return next;
+    });
+  };
 
   const loadReport = (term: string) => {
     setSelectedKeyword(term);
     setKeyword(term);
-    setResults(savedReports[term] ?? []);
+    const set = savedReports[term] ?? [];
+    setResults(set);
+    setScore(calculateScore(set));
   };
 
-  useEffect(() => {
-    if (savedReports[selectedKeyword]) {
-      setResults(savedReports[selectedKeyword]);
-    }
-  }, [selectedKeyword, savedReports]);
-
+  /* ---------- UI ---------- */
   return (
     <div className="flex h-screen">
+      {/* Sidebar */}
       {sidebarOpen && (
         <aside className="w-64 border-r bg-gray-50 p-4 space-y-2">
-          <h2 className="text-sm font-semibold mb-2 flex justify-between">
+          <h2 className="text-sm font-semibold flex justify-between mb-2">
             Saved Reports
             <button onClick={() => setSidebarOpen(false)}>✖</button>
           </h2>
           <ul className="space-y-1 text-sm">
             {trackedKeywords.map((k) => (
               <li key={k}>
-                <button
-                  className="text-blue-600 underline"
-                  onClick={() => loadReport(k)}
-                >
+                <button className="text-blue-600 underline" onClick={() => loadReport(k)}>
                   {k}
                 </button>
               </li>
@@ -165,49 +178,49 @@ const Index = () => {
         </aside>
       )}
 
+      {/* Main */}
       <main className="flex-1 overflow-y-auto p-6 space-y-6">
+        {/* Top bar */}
         <div className="flex items-center gap-2">
-          <button
-            className="px-2 py-1 border rounded"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-          >
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="px-2 py-1 border rounded">
             {sidebarOpen ? '←' : '☰'}
           </button>
-
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="Enter keyword"
             className="flex-grow border rounded px-3 py-2"
           />
-
-          <button
-            onClick={() => refreshKeyword(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
+          <button onClick={() => refreshKeyword(true)} className="bg-blue-600 text-white px-4 py-2 rounded">
             Track
           </button>
-
-          <button
-            onClick={() => refreshKeyword(true)}
-            className="ml-2 px-3 py-2 border rounded bg-green-600 text-white"
-          >
+          <button onClick={() => refreshKeyword(true)} className="ml-2 px-3 py-2 border rounded bg-green-600 text-white">
             🔄 Update Now
           </button>
         </div>
 
         {isLoading && <p className="text-sm text-gray-500">Fetching results…</p>}
 
+        {/* Score */}
         <section className="border rounded p-4 w-max">
           <h3 className="text-sm font-semibold mb-1">Reputation Score</h3>
-          <p className="text-2xl font-bold">{reputationScore()}/100</p>
+          <p className="text-2xl font-bold">{score}/100</p>
         </section>
 
+        {/* Table */}
         <ResultsTable
           results={results}
           updateSentiment={updateSentiment}
           toggleControl={toggleControl}
         />
+
+        {/* Trend */}
+        {results.length > 0 && (
+          <section className="border rounded p-4">
+            <h3 className="text-sm font-semibold mb-2">Movement History by URL</h3>
+            <TrendChart results={results} />
+          </section>
+        )}
       </main>
     </div>
   );
