@@ -103,8 +103,8 @@ const Index = () => {
     
     setIsRefreshing(true);
     try {
-      // Use DataForSEO API directly
-      const response = await fetch('/api/serp', {
+      // Call the DataForSEO API directly using the dataforseo.js module
+      const response = await fetch('http://192.168.1.115:3001/serp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -130,7 +130,7 @@ const Index = () => {
       );
       
       // Process new results, preserving existing sentiment and control data
-      const newResults = data.map((result: any, index: number) => {
+      const newResults = data.results.map((result: any, index: number) => {
         const existing = existingResultsMap.get(result.url);
         const isNew = !existing; // Mark as new if not found in existing results
         
