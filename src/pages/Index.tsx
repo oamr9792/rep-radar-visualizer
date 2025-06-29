@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Form } from '@/components/ui/form';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReputationCard from '@/components/ReputationCard';
 import ResultsTable from '@/components/ResultsTable';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -12,7 +14,10 @@ const Index = () => {
   const [score, setScore] = useState(78);
   const [lastUpdated, setLastUpdated] = useState('2025-06-29 03:00 PM');
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [keyword, setKeyword] = useState('your brand name'); // Changed from currentKeyword to keyword
+  const [keyword, setKeyword] = useState('');
+  const [trackedKeywords, setTrackedKeywords] = useState<string[]>([]);
+  const [savedReports, setSavedReports] = useState<Record<string, any[]>>({});
+  const [selectedKeyword, setSelectedKeyword] = useState('');
   
   const [results, setResults] = useState([
     {
@@ -84,6 +89,10 @@ const Index = () => {
       });
 
       const data = await response.json();
+      
+      setSavedReports(prev => ({ ...prev, [keyword]: data.results }));
+      setTrackedKeywords(prev => [...new Set([...prev, keyword])]);
+      setSelectedKeyword(keyword);
       setResults(data.results);
       setLastUpdated(new Date().toLocaleString());
     } catch (error) {
@@ -145,6 +154,12 @@ const Index = () => {
     setScore(newScore);
   }, [results]);
 
+  useEffect(() => {
+    if (savedReports[selectedKeyword]) {
+      setResults(savedReports[selectedKeyword]);
+    }
+  }, [selectedKeyword, savedReports]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-4">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -160,7 +175,7 @@ const Index = () => {
 
         {/* Keyword Input Form */}
         <Card className="shadow-lg">
-          <CardContent className="p-6">
+          <CardContent className="p-6 space-y-4">
             <form className="flex items-center space-x-2" onSubmit={(e) => { e.preventDefault(); refreshKeyword(); }}>
               <Input
                 type="text"
@@ -173,6 +188,25 @@ const Index = () => {
                 {isRefreshing ? 'Tracking...' : 'Track'}
               </Button>
             </form>
+            
+            {/* Saved Reports Dropdown */}
+            {trackedKeywords.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 whitespace-nowrap">Saved Reports:</span>
+                <Select value={selectedKeyword} onValueChange={setSelectedKeyword}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a saved report" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {trackedKeywords.map((trackedKeyword) => (
+                      <SelectItem key={trackedKeyword} value={trackedKeyword}>
+                        {trackedKeyword}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </CardContent>
         </Card>
 
