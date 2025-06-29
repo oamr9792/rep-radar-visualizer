@@ -122,19 +122,33 @@ const Index = () => {
   };
 
   function updateSentiment(id: number, newSentiment: string) {
-    setResults(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, sentiment: newSentiment } : item
-      )
+    const updatedResults = results.map(item =>
+      item.id === id ? { ...item, sentiment: newSentiment } : item
     );
+    setResults(updatedResults);
+    
+    // Update the saved reports if we have a selected keyword
+    if (selectedKeyword) {
+      setSavedReports(prev => ({
+        ...prev,
+        [selectedKeyword]: updatedResults
+      }));
+    }
   }
 
   function toggleControl(id: number) {
-    setResults(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, hasControl: !item.hasControl } : item
-      )
+    const updatedResults = results.map(item =>
+      item.id === id ? { ...item, hasControl: !item.hasControl } : item
     );
+    setResults(updatedResults);
+    
+    // Update the saved reports if we have a selected keyword
+    if (selectedKeyword) {
+      setSavedReports(prev => ({
+        ...prev,
+        [selectedKeyword]: updatedResults
+      }));
+    }
   }
 
   const calculateScore = (data: typeof results) => {
