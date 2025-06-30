@@ -158,69 +158,186 @@ const Index = () => {
 
   /* ---------- UI ---------- */
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-50" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Sidebar */}
       {sidebarOpen && (
-        <aside className="w-64 border-r bg-gray-50 p-4 space-y-2">
-          <h2 className="text-sm font-semibold flex justify-between mb-2">
-            Saved Reports
-            <button onClick={() => setSidebarOpen(false)}>✖</button>
-          </h2>
-          <ul className="space-y-1 text-sm">
-            {trackedKeywords.map((k) => (
-              <li key={k}>
-                <button className="text-blue-600 underline" onClick={() => loadReport(k)}>
-                  {k}
+        <aside className="w-80 bg-white border-r border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-100" style={{ backgroundColor: '#17163e' }}>
+            <div className="flex items-center justify-between mb-4">
+              <img 
+                src="/lovable-uploads/a259531e-f62f-4dd5-862c-d7a5eab503a6.png" 
+                alt="Reputation Citadel" 
+                className="h-12 w-auto"
+              />
+              <button 
+                onClick={() => setSidebarOpen(false)}
+                className="text-white hover:text-gray-300 transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+            <h1 className="text-xl font-bold text-white">Reputation Dashboard</h1>
+          </div>
+          
+          <div className="p-6">
+            <h2 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">
+              Tracked Keywords
+            </h2>
+            <div className="space-y-2">
+              {trackedKeywords.map((k) => (
+                <button
+                  key={k}
+                  onClick={() => loadReport(k)}
+                  className={`w-full text-left px-4 py-3 rounded-lg transition-all ${
+                    selectedKeyword === k
+                      ? 'text-white shadow-md'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                  style={{ 
+                    backgroundColor: selectedKeyword === k ? '#17163e' : 'transparent'
+                  }}
+                >
+                  <div className="font-medium">{k}</div>
+                  <div className="text-xs opacity-75 mt-1">
+                    {savedReports[k]?.length || 0} results
+                  </div>
                 </button>
-              </li>
-            ))}
-          </ul>
+              ))}
+              {trackedKeywords.length === 0 && (
+                <p className="text-gray-500 text-sm italic">No keywords tracked yet</p>
+              )}
+            </div>
+          </div>
         </aside>
       )}
 
-      {/* Main */}
-      <main className="flex-1 overflow-y-auto p-6 space-y-6">
-        {/* Top bar */}
-        <div className="flex items-center gap-2">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="px-2 py-1 border rounded">
-            {sidebarOpen ? '←' : '☰'}
-          </button>
-          <input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="Enter keyword"
-            className="flex-grow border rounded px-3 py-2"
-          />
-          <button onClick={() => refreshKeyword(true)} className="bg-blue-600 text-white px-4 py-2 rounded">
-            Track
-          </button>
-          <button onClick={() => refreshKeyword(true)} className="ml-2 px-3 py-2 border rounded bg-green-600 text-white">
-            🔄 Update Now
-          </button>
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
+          <div className="flex items-center gap-4">
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                style={{ color: '#17163e' }}
+              >
+                ☰
+              </button>
+            )}
+            
+            <div className="flex-1 flex gap-4">
+              <input
+                value={keyword}
+                onChange={(e) => setKeyword(e.target.value)}
+                placeholder="Enter keyword to track..."
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all"
+                style={{ focusRingColor: '#17163e' }}
+              />
+              <button
+                onClick={() => refreshKeyword(true)}
+                disabled={isLoading}
+                className="px-6 py-3 text-white font-medium rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: '#17163e' }}
+              >
+                {isLoading ? 'Tracking...' : 'Track Keyword'}
+              </button>
+              <button
+                onClick={() => refreshKeyword(true)}
+                disabled={isLoading}
+                className="px-4 py-3 border-2 font-medium rounded-lg transition-all hover:bg-opacity-10"
+                style={{ 
+                  borderColor: '#d1be9e',
+                  color: '#d1be9e',
+                  backgroundColor: 'transparent'
+                }}
+              >
+                🔄 Update
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          {/* Score Card */}
+          {results.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    Reputation Score
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Based on search result sentiment analysis
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div 
+                    className="text-4xl font-bold mb-1"
+                    style={{ color: score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444' }}
+                  >
+                    {score}
+                  </div>
+                  <div className="text-sm text-gray-500">out of 100</div>
+                </div>
+              </div>
+              <div className="mt-4 w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="h-2 rounded-full transition-all duration-500"
+                  style={{
+                    width: `${score}%`,
+                    backgroundColor: score >= 70 ? '#10b981' : score >= 40 ? '#f59e0b' : '#ef4444'
+                  }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Results Table */}
+          {results.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Search Results ({results.length})
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Manage sentiment and control status for each result
+                </p>
+              </div>
+              <ResultsTable
+                results={results}
+                updateSentiment={updateSentiment}
+                toggleControl={toggleControl}
+              />
+            </div>
+          )}
+
+          {/* Trend Chart */}
+          {results.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Ranking Trends
+              </h3>
+              <TrendChart results={results} />
+            </div>
+          )}
+
+          {/* Empty State */}
+          {results.length === 0 && !isLoading && (
+            <div className="text-center py-12">
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full flex items-center justify-center" style={{ backgroundColor: '#f3f4f6' }}>
+                <div className="text-3xl" style={{ color: '#17163e' }}>🔍</div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No Results Yet
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Enter a keyword above and click "Track Keyword" to start monitoring your online reputation.
+              </p>
+            </div>
+          )}
         </div>
-
-        {isLoading && <p className="text-sm text-gray-500">Fetching results…</p>}
-
-        {/* Score */}
-        <section className="border rounded p-4 w-max">
-          <h3 className="text-sm font-semibold mb-1">Reputation Score</h3>
-          <p className="text-2xl font-bold">{score}/100</p>
-        </section>
-
-        {/* Table */}
-        <ResultsTable
-          results={results}
-          updateSentiment={updateSentiment}
-          toggleControl={toggleControl}
-        />
-
-        {/* Trend */}
-        {results.length > 0 && (
-          <section className="border rounded p-4">
-            <h3 className="text-sm font-semibold mb-2">Movement History by URL</h3>
-            <TrendChart results={results} />
-          </section>
-        )}
       </main>
     </div>
   );
