@@ -162,7 +162,7 @@ const Index = () => {
       {/* Sidebar */}
       {sidebarOpen && (
         <aside className="w-80 bg-white border-r border-gray-200 shadow-sm">
-          <div className="p-6 border-b border-gray-100" style={{ backgroundColor: '#17163e' }}>
+          <div className="p-6 border-b border-gray-100 bg-white">
             <div className="flex items-center justify-between mb-4">
               <img 
                 src="/lovable-uploads/a259531e-f62f-4dd5-862c-d7a5eab503a6.png" 
@@ -171,12 +171,13 @@ const Index = () => {
               />
               <button 
                 onClick={() => setSidebarOpen(false)}
-                className="text-white hover:text-gray-300 transition-colors"
+                className="hover:bg-gray-100 p-2 rounded-lg transition-colors"
+                style={{ color: '#17163e' }}
               >
                 ✕
               </button>
             </div>
-            <h1 className="text-xl font-bold text-white">Reputation Dashboard</h1>
+            <h1 className="text-xl font-bold" style={{ color: '#17163e' }}>Reputation Dashboard</h1>
           </div>
           
           <div className="p-6">
@@ -231,8 +232,7 @@ const Index = () => {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="Enter keyword to track..."
-                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent transition-all"
-                style={{ focusRingColor: '#17163e' }}
+                className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
               <button
                 onClick={() => refreshKeyword(true)}
