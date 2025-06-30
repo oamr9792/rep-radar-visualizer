@@ -12,26 +12,39 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
+function safeDomain(url) {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+}
+
+// ──────────────────────────── SERP Endpoint ────────────────────────────
 app.post('/serp', async (req, res) => {
   const { keyword } = req.body;
-  if (!keyword) return res.status(400).json({ error: 'Keyword is required' });
+
+  if (!keyword || typeof keyword !== 'string') {
+    return res.status(400).json({ error: 'Invalid keyword' });
+  }
 
   try {
-    // Fetch raw results from DataForSEO
     const rawResults = await fetchSerpResults(keyword);
 
-    // Add defaults
+    if (!Array.isArray(rawResults)) {
+      throw new Error('SERP data fetch failed');
+    }
+
     const withDefaults = rawResults.map((r) => ({
       ...r,
+      domain: safeDomain(r.url),
       sentiment: 'NEUTRAL',
       hasControl: false,
-      domain: new URL(r.url).hostname,
     }));
 
-    // ─── Save to DB using Prisma ───────────────────────────────────────────────
     await prisma.keyword.upsert({
       where: { term: keyword },
-      update: {}, // we don't modify existing keywords
+      update: {},
       create: {
         term: keyword,
         snapshots: {
@@ -60,10 +73,12 @@ app.post('/serp', async (req, res) => {
   }
 });
 
+// ──────────────────────────── Health Check ────────────────────────────
 app.get('/', (req, res) => {
   res.send('ORM Rank Tracker backend is running ✅');
 });
 
+// ──────────────────────────── Start Server ────────────────────────────
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
