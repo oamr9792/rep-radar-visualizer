@@ -165,7 +165,7 @@ const Index = () => {
           <div className="p-6 border-b border-gray-100 bg-white">
             <div className="flex items-center justify-between mb-4">
               <img 
-                src="/lovable-uploads/a259531e-f62f-4dd5-862c-d7a5eab503a6.png" 
+                src="/lovable-uploads/e20c03c5-960c-4030-8120-16eb69de9a38.png" 
                 alt="Reputation Citadel" 
                 className="h-12 w-auto"
               />
