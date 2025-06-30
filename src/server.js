@@ -14,32 +14,39 @@ app.use(express.json());
 
 app.post('/serp', async (req, res) => {
   const { keyword } = req.body;
-
-  if (!keyword) {
-    return res.status(400).json({ error: 'Keyword is required' });
-  }
+  if (!keyword) return res.status(400).json({ error: 'Keyword is required' });
 
   try {
-    console.log(`🔎 Fetching SERP for: ${keyword}`);
-    const results = await fetchSerpResults(keyword);
+    // Fetch raw results from DataForSEO
+    const rawResults = await fetchSerpResults(keyword);
 
-    const withDefaults = results.map(r => ({
-      rank: r.rank,
-      title: r.title,
-      url: r.url,
-      serpFeature: r.serpFeature,
+    // Add defaults
+    const withDefaults = rawResults.map((r) => ({
+      ...r,
       sentiment: 'NEUTRAL',
       hasControl: false,
+      domain: new URL(r.url).hostname,
     }));
 
+    // ─── Save to DB using Prisma ───────────────────────────────────────────────
     await prisma.keyword.upsert({
       where: { term: keyword },
-      update: {},
+      update: {}, // we don't modify existing keywords
       create: {
         term: keyword,
         snapshots: {
           create: {
-            serpItems: withDefaults,
+            serpItems: {
+              create: withDefaults.map((item) => ({
+                rank: item.rank,
+                title: item.title,
+                url: item.url,
+                serpFeature: item.serpFeature,
+                sentiment: item.sentiment,
+                hasControl: item.hasControl,
+                domain: item.domain,
+              })),
+            },
           },
         },
       },
