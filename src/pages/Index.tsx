@@ -167,7 +167,7 @@ const Index = () => {
               <img 
                 src="/lovable-uploads/e20c03c5-960c-4030-8120-16eb69de9a38.png" 
                 alt="Reputation Citadel" 
-                className="h-12 w-auto"
+                className="h-16 w-auto"
               />
               <button 
                 onClick={() => setSidebarOpen(false)}
