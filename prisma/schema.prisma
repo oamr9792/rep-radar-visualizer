@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // Change to "postgresql" if using PostgreSQL
+  provider = "sqlite" // Change to "postgresql" if you're using PostgreSQL
   url      = env("DATABASE_URL")
 }
 
@@ -28,7 +28,7 @@ model SerpItem {
   rank        Int
   title       String
   url         String
-  domain      String   // ✅ Added this line to fix 500 error
+  domain      String
   serpFeature String
   sentiment   String
   hasControl  Boolean
