@@ -28,6 +28,7 @@ model SerpItem {
   rank        Int
   title       String
   url         String
+  domain      String   // ✅ Added this line to fix 500 error
   serpFeature String
   sentiment   String
   hasControl  Boolean
