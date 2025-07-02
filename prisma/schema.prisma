@@ -3,9 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite" // Change to "postgresql" if you're using PostgreSQL
+  // If you later switch to PostgreSQL, just change the provider and URL.
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+/* ─────────────────────────  MAIN ENTITIES  ───────────────────────── */
 
 model Keyword {
   id        Int        @id @default(autoincrement())
@@ -21,15 +24,31 @@ model Snapshot {
   serpItems  SerpItem[]
 }
 
+/* ─────────────────────────  SEARCH RESULTS  ─────────────────────────
+   Each SerpItem belongs to ONE snapshot, but we also store keywordId so
+   we can enforce a (keyword, url) uniqueness constraint.  This makes it
+   possible to “upsert” the same URL on every update and keep the user’s
+   sentiment / control values.
+───────────────────────────────────────────────────────────────────────*/
 model SerpItem {
   id          Int      @id @default(autoincrement())
-  snapshot    Snapshot @relation(fields: [snapshotId], references: [id])
+
+  /*  relations  */
+  snapshot    Snapshot @relation(fields: [snapshotId], references: [id], onDelete: Cascade)
   snapshotId  Int
+  keywordId   Int      // duplicated for @@unique constraint (set below)
+
+  /*  SERP data  */
   rank        Int
   title       String
   url         String
   domain      String
   serpFeature String
-  sentiment   String
-  hasControl  Boolean
+
+  /*  User-controlled fields – persist between snapshots  */
+  sentiment   String   @default("NEUTRAL")  // POSITIVE | NEUTRAL | NEGATIVE
+  hasControl  Boolean  @default(false)      // true  = “We control this URL”
+
+  /*  (keywordId, url) must be unique, regardless of snapshot  */
+  @@unique([keywordId, url], name: "keyword_url_unique")
 }
