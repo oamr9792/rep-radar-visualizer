@@ -74,9 +74,9 @@
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@tailwindcss/typography": "^0.5.15",
-    "@types/node": "^22.15.34",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
+    "@types/node": "^22.16.0",
+    "@types/react": "^18.3.23",
+    "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.9.0",
@@ -88,18 +88,5 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^5.4.1"
-  },
-  "description": "**URL**: https://lovable.dev/projects/17369bfd-8c52-4905-a106-0c630b3c8187",
-  "main": "eslint.config.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/oamr9792/rep-radar-visualizer.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/oamr9792/rep-radar-visualizer/issues"
-  },
-  "homepage": "https://github.com/oamr9792/rep-radar-visualizer#readme"
+  }
 }
